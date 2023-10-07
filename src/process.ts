@@ -1,3 +1,6 @@
+import MountableFileSystem from "browserfs/dist/node/backend/MountableFileSystem";
+import { FS } from "./fs";
+
 export function resolveRelativePath(path: string, cwd: string): string {
     const url = new URL(path, "https://0.0.0.0" + cwd);
     return url.pathname;
@@ -8,7 +11,7 @@ export default abstract class Process {
     args: string[];
     cwd = "/";
 
-    constructor(...args: string[]) {
+    constructor(public fs: FS, ...args: string[]) {
         this.args = args;
     }
 

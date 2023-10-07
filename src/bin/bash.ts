@@ -35,7 +35,7 @@ export default class Bash extends Process {
                 default: {
                     const executable = PATH[input[0].toLowerCase()]?.();
                     if (executable) {
-                        await this.runSubprocessAndMapInputs(new executable(...input.slice(1)));
+                        await this.runSubprocessAndMapInputs(new executable(this.fs, ...input.slice(1)));
                     }
                     else {
                         this.println(`bash: ${input[0]}: command not found`);

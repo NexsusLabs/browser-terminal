@@ -52,9 +52,9 @@ export default abstract class Process {
         }
     }
 
-    async runSubprocessAndMapInputs(process: Process, cwd?: string) {
+    async runSubprocessAndMapInputs(process: Process, cwd?: string, print = this.print) {
         process.cwd = resolveRelativePath(cwd || '.', this.cwd);
-        process.print = this.print;
+        process.print = print;
         this.onInput.push([process.handleInput, false]);
         await process.main();
         this.onInput = this.onInput.filter(handler => handler[0] !== process.handleInput);

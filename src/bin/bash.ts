@@ -81,7 +81,7 @@ export default class Bash extends Process {
                         let to = resolveRelativePath(command[1], this.cwd);
                         if (!to.endsWith('/')) to += '/';
                         try {
-                            await fs.promises.readdir(to);
+                            await this.fs.readdir(to);
                             this.cwd = to;
                         } catch (e) {
                             if (e instanceof Error) this.println(e.message);

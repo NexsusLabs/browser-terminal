@@ -2,6 +2,7 @@ import BrowserFS, { FileSystem } from 'browserfs'
 import MountableFileSystem from 'browserfs/dist/node/backend/MountableFileSystem';
 import { FileFlag } from 'browserfs/dist/node/core/file_flag';
 import { promisify } from 'util'
+import { DefaultFS, Dir } from './defaultFs';
 
 const CreateUnixFS = promisify(FileSystem.MountableFileSystem.Create);
 const CreateIndexedDB = promisify(FileSystem.IndexedDB.Create);
@@ -31,9 +32,21 @@ export async function createFS() {
     window.fs = Fs;
     //@ts-ignore
     window.FileFlag = FileFlag
-    mkIfNotExists(()=>Fs.mkdir('/usr', 0o777));
-    mkIfNotExists(() => Fs.mkdir('/usr/bin', 0o777));
-    mkIfNotExists(()=>Fs.writeFile("/usr/bin/node", "#!/usr/bin/node\n//Virtual file", 'utf-8', new FileFlag("w"), 0o555))
+    if (!await Fs.exists("/usr")) {
+        async function generateDir(path: string, dir: Dir) {
+            for (const [name, entry] of dir) {
+                if (typeof entry == 'string') {
+                    console.log('file', path+name)
+                    await Fs.writeFile(path + name, entry, 'utf-8', FileFlag.getFileFlag('w'), 0o555);
+                } else {
+                    console.log('dir', path)
+                    await Fs.mkdir(path+name+'/', 0o777)
+                    generateDir(path+name+'/', entry)
+                }
+            }
+        }
+        generateDir('/', DefaultFS);
+    }
     return Fs;
 }
 

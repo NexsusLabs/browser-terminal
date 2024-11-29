@@ -5,14 +5,42 @@ import PATH from "./PATH";
 import { fs } from 'memfs';
 import { FileFlag } from "browserfs/dist/node/core/file_flag";
 
+function hasGoodQuotes(s: string) {
+    let q = '';
+    let escape = false;
+    for (const ch of s) {
+        if (escape) {
+            escape = false;
+            continue
+        }
+        if (ch == '\\') {
+            escape = true;
+            continue
+        }
+
+        if (['`', "'", `"`].includes(ch)) {
+            if (!q) q = ch;
+            else if (q == ch) q = '';
+        }
+    }
+    return q==''
+}
+
 export default class Bash extends Process {
     override async main() {
         while (true) {
             this.print(`guest@${window.location.host || "VirtualTerminal"} ${this.cwd} $ `);
-            const input = parse(await this.readLine())
+            let line = '';
+            do {
+                if(line) this.print('> ')
+                line += await this.readLine()+'\n';
+            } while (line.endsWith('\\\n') || !hasGoodQuotes(line));
+            line = line.replace('\\\n', '')
+            const parsed = parse(line)
+            console.log(parsed)
             let command: string[] = [];
             let redirect: undefined | true | string, valid = true;
-            for (const word of input) {
+            for (const word of parsed) {
                 if (typeof word == 'object' && 'comment' in word) continue;
                 if (redirect === true) {
                     if (typeof word == 'string') redirect = word;

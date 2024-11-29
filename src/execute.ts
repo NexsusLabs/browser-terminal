@@ -12,7 +12,7 @@ export class Node extends Process {
 
         const globals = {
             process: {
-                args: this.args,
+                args: this.args.slice(1),
                 fs: this.fs,
                 cwd: this.cwd,
                 print: this.print,

@@ -59,4 +59,5 @@ export class FS {
     exists = (path: string)=> new Promise<boolean>(resolve=> this.fs.exists(path, resolve))
     readFile = promisify(this.fs.readFile.bind(this.fs));
     writeFile = promisify(this.fs.writeFile.bind(this.fs));
+    
 }

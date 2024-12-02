@@ -53,11 +53,11 @@ export const DefaultFS: Dir = [
                     }
                 }));
                 `], 
-                /*[
-                    'ls',`
-                    
-                    `
-                ]*/
+            ['ls',`#!/usr/bin/node
+                const res = await process.fs.promises.readdir(process.resolveRelativePath(process.args[0] || '.', process.cwd));
+                for (const item of res) {
+                    process.println(item);
+                }`]
         ]]
     ]]
 ]

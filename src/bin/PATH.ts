@@ -1,4 +1,3 @@
-import MountableFileSystem from "browserfs/dist/node/backend/MountableFileSystem";
 import Process from "../process";
 import Bash from "./bash";
 import Echo from "./echo";

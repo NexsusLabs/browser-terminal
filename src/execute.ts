@@ -1,6 +1,5 @@
 import Sandbox from "@nyariv/sandboxjs";
 import Process, { resolveRelativePath } from "./process";
-import { FileFlag } from "browserfs/dist/node/core/file_flag";
 import { h32 } from "xxhashjs";
 
 const sandbox = new Sandbox();
@@ -20,12 +19,11 @@ export class Node extends Process {
                 readKey: this.readKey,
                 readLine: this.readLine,
                 resolveRelativePath,
-                fileFlag: FileFlag.getFileFlag
             }
         }
 
         // read file
-        let file = await this.fs.readFile(resolveRelativePath(this.args[0], this.cwd), 'utf-8', FileFlag.getFileFlag('r'));
+        let file = await this.fs.promises.readFile(resolveRelativePath(this.args[0], this.cwd), 'utf-8');
         if (!file) return;
         if (typeof file !== 'string') return;
 

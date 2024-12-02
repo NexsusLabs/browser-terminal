@@ -4,7 +4,7 @@ import Process, { resolveRelativePath } from "../process";
 export class LS extends Process {
     async main() {
         try {
-            const res = await this.fs.readdir(resolveRelativePath(this.args[0] || '.', this.cwd));
+            const res = await this.fs.promises.readdir(resolveRelativePath(this.args[0] || '.', this.cwd));
             for (const item of res!) {
                 this.println(item as string);
             }

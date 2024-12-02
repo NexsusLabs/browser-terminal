@@ -1,4 +1,3 @@
-import MountableFileSystem from "browserfs/dist/node/backend/MountableFileSystem";
 import { FS } from "./fs";
 
 export function resolveRelativePath(path: string, cwd: string): string {

@@ -2,8 +2,6 @@ import { parse } from "shell-quote";
 import Process from "../process";
 import { resolveRelativePath } from "../process";
 import PATH from "./PATH";
-import { fs } from 'memfs';
-import { FileFlag } from "browserfs/dist/node/core/file_flag";
 
 function hasGoodQuotes(s: string) {
     let q = '';
@@ -81,7 +79,7 @@ export default class Bash extends Process {
                         let to = resolveRelativePath(command[1], this.cwd);
                         if (!to.endsWith('/')) to += '/';
                         try {
-                            await this.fs.readdir(to);
+                            await this.fs.promises.readdir(to);
                             this.cwd = to;
                         } catch (e) {
                             if (e instanceof Error) this.println(e.message);
@@ -97,7 +95,7 @@ export default class Bash extends Process {
                     let executable = PATH[command[0]]?.();
                     let removeFirstArg = true;
                     if (!executable) {
-                        if (await this.fs.exists(resolveRelativePath(command[0], this.cwd))) {
+                        if (await this.fs.promises.exists(resolveRelativePath(command[0], this.cwd))) {
                             executable = PATH['node']!();
                             removeFirstArg = false;
                         }
@@ -110,7 +108,7 @@ export default class Bash extends Process {
                     if (redirect) {
                         let output=''
                         await this.runSubprocessAndMapInputs(new executable(this.fs, ...command), '.', data => output += data);
-                        await this.fs.writeFile(resolveRelativePath(redirect, this.cwd), output, 'utf-8', FileFlag.getFileFlag('w'),0o555)
+                        await this.fs.writeFile(resolveRelativePath(redirect, this.cwd), output, 'utf-8');
                     }
                     else
                         await this.runSubprocessAndMapInputs(new executable(this.fs, ...command), '.');

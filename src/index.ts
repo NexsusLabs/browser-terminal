@@ -1,7 +1,6 @@
 import Process from "./process";
 import Bash from "./bin/bash";
 import "./style.css";
-import 'browserfs';
 import { createFS } from "./fs";
 
 const screen = document.getElementById("output")!;

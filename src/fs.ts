@@ -1,11 +1,7 @@
-import BrowserFS, { FileSystem } from 'browserfs'
-import MountableFileSystem from 'browserfs/dist/node/backend/MountableFileSystem';
-import { FileFlag } from 'browserfs/dist/node/core/file_flag';
-import { promisify } from 'util'
-import { DefaultFS, Dir } from './defaultFs';
 
-const CreateUnixFS = promisify(FileSystem.MountableFileSystem.Create);
-const CreateIndexedDB = promisify(FileSystem.IndexedDB.Create);
+import { DefaultFS, Dir } from './defaultFs';
+import { configure, fs } from '@zenfs/core';
+import { IndexedDB } from '@zenfs/dom';
 
 async function mkIfNotExists(cb: ()=> Promise<unknown>) {
     // yeah just try to make it and ignore if it explodes
@@ -17,47 +13,31 @@ async function mkIfNotExists(cb: ()=> Promise<unknown>) {
     }
 }
 
+export type FS = typeof fs
 
 export async function createFS() {
-    const root = await CreateIndexedDB({
-        storeName: 'sda1'
-    });
-    if (!root) throw new Error("Failed to load /dev/sda1");
-    const fs = await CreateUnixFS({
-        '/': root
-    });
-    if (!fs) throw new Error("Failed to create Unix file system");
-    const Fs = new FS(fs);
+    await configure({
+        mounts: {
+            '/': {backend: IndexedDB, storeName: "sda1"}
+        },
+        addDevices: true
+    })
     //@ts-ignore
-    window.fs = Fs;
-    //@ts-ignore
-    window.FileFlag = FileFlag
-    if (!await Fs.exists("/usr")) {
+    window.fs = fs;
+    if (!fs.existsSync("/usr")) {
         async function generateDir(path: string, dir: Dir) {
             for (const [name, entry] of dir) {
                 if (typeof entry == 'string') {
                     console.log('file', path+name)
-                    await Fs.writeFile(path + name, entry, 'utf-8', FileFlag.getFileFlag('w'), 0o555);
+                    await fs.promises.writeFile(path + name, entry, 'utf-8');
                 } else {
                     console.log('dir', path)
-                    await Fs.mkdir(path+name+'/', 0o777)
+                    await fs.promises.mkdir(path+name+'/')
                     generateDir(path+name+'/', entry)
                 }
             }
         }
         generateDir('/', DefaultFS);
     }
-    return Fs;
-}
-
-export class FS {
-    constructor(public fs: MountableFileSystem) { }
-
-    readdir = promisify(this.fs.readdir.bind(this.fs))
-    mkdir = promisify(this.fs.mkdir.bind(this.fs))
-    rmdir = promisify(this.fs.rmdir.bind(this.fs))
-    exists = (path: string)=> new Promise<boolean>(resolve=> this.fs.exists(path, resolve))
-    readFile = promisify(this.fs.readFile.bind(this.fs));
-    writeFile = promisify(this.fs.writeFile.bind(this.fs));
-    
+    return fs;
 }

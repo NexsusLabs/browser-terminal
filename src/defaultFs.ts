@@ -7,7 +7,7 @@ export const DefaultFS: Dir = [
             ['cat',
                 `#!/usr/bin/node
                 const path = process.resolveRelativePath(process.args[0], process.cwd);
-                const file = await process.fs.readFile(path, 'utf-8', process.fileFlag('r'))
+                const file = await process.fs.promises.readFile(path, 'utf-8')
                 process.println(file)`],
             ['mkdir',
                 `#!/usr/bin/node
@@ -16,7 +16,7 @@ export const DefaultFS: Dir = [
                     return;
                 }
                 await Promise.all(process.args.map(async dir => {
-                    await process.fs.mkdir(process.resolveRelativePath(dir, process.cwd), 511).catch(e=> {
+                    await process.fs.promises.mkdir(process.resolveRelativePath(dir, process.cwd)).catch(e=> {
                         if (e instanceof Error) process.println(e.message);
                         else throw e;
                     })
@@ -29,7 +29,7 @@ export const DefaultFS: Dir = [
                     return;
                 }
                 await Promise.all(process.args.map(async dir => {
-                    await process.fs.rmdir(process.resolveRelativePath(dir, process.cwd)).catch(e=> {
+                    await process.fs.promises.rmdir(process.resolveRelativePath(dir, process.cwd)).catch(e=> {
                         if (e instanceof Error) process.println(e.message);
                         else throw e;
                     })
@@ -46,12 +46,10 @@ export const DefaultFS: Dir = [
                 }
                 await Promise.all(process.args.map(async file => {
                     const path = process.resolveRelativePath(file, process.cwd);
-                    if(await process.fs.exists(path)) {
-                        // yeah just read it and write the same data why not, who cares about performance
-                        let contents = await process.fs.readFile(path,'utf-8', process.fileFlag('r'));
-                        await process.fs.writeFile(path, contents, 'utf-8', process.fileFlag('w'), 365);
+                    if(await process.fs.promises.exists(path)) {
+                        await process.fs.promises.utimes(path, new Date(), new Date());
                     } else {
-                        await process.fs.writeFile(path, '', 'utf-8', process.fileFlag('w'), 365);
+                        await process.fs.promises.writeFile(path, '', 'utf-8');
                     }
                 }));
                 `], 

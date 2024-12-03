@@ -25,19 +25,29 @@ export async function createFS() {
     //@ts-ignore
     window.fs = fs;
     if (!fs.existsSync("/usr")) {
-        async function generateDir(path: string, dir: Dir) {
-            for (const [name, entry] of dir) {
-                if (typeof entry == 'string') {
-                    console.log('file', path+name)
-                    await fs.promises.writeFile(path + name, entry, 'utf-8');
-                } else {
-                    console.log('dir', path)
-                    await fs.promises.mkdir(path+name+'/')
-                    generateDir(path+name+'/', entry)
-                }
-            }
-        }
-        generateDir('/', DefaultFS);
+        await generateFS();
     }
     return fs;
+}
+
+async function generateFS() {
+    async function generateDir(path: string, dir: Dir) {
+        for (const [name, entry] of dir) {
+            if (typeof entry == 'string') {
+                console.log('file', path + name);
+                await fs.promises.writeFile(path + name, entry, 'utf-8');
+            } else {
+                console.log('dir', path);
+                await fs.promises.mkdir(path + name + '/');
+                generateDir(path + name + '/', entry);
+            }
+        }
+    }
+    await generateDir('/', DefaultFS);
+}
+
+//@ts-ignore
+window.regenerateFS = async()=>{
+    await fs.promises.rm('/usr', {recursive: true})
+    await generateFS()
 }

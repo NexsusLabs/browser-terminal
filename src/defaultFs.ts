@@ -6,21 +6,27 @@ export const DefaultFS: Dir = [
         ['bin', [
             ['cat',
                 `#!/usr/bin/node
-                const path = process.resolveRelativePath(process.args[0], process.cwd);
-                const file = await process.fs.promises.readFile(path, 'utf-8')
-                process.println(file)`],
+                if(process.args.length > 0) {
+                    await Promise.all(process.args.map(async file => {
+                        const path = process.resolveRelativePath(file, process.cwd);
+                        await process.fs.promises.readFile(path, 'utf-8').then(
+                            file=> process.println(file),
+                            e=> {
+                                if (e instanceof Error) process.println(e.message);
+                                else throw e;
+                            });
+                    }));
+                } else {
+                    while(true) {
+                        process.println(await process.readLine());
+                    }
+                }`],
             ['mkdir',
                 `#!/usr/bin/node
                 if(process.args.length == 0) {
                     process.println("mkdir: Missing operand");
                     return;
                 }
-                await Promise.all(process.args.map(async dir => {
-                    await process.fs.promises.mkdir(process.resolveRelativePath(dir, process.cwd)).catch(e=> {
-                        if (e instanceof Error) process.println(e.message);
-                        else throw e;
-                    })
-                }));
             `],
             ['rmdir',
                 `#!/usr/bin/node
@@ -57,7 +63,9 @@ export const DefaultFS: Dir = [
                 const res = await process.fs.promises.readdir(process.resolveRelativePath(process.args[0] || '.', process.cwd));
                 for (const item of res) {
                     process.println(item);
-                }`]
+                }`],
+            ['echo', `#!/usr/bin/node
+                process.println(process.args.join(' '));`]
         ]]
     ]]
 ]

@@ -14,10 +14,10 @@ export class Node extends Process {
                 args: this.args.slice(1),
                 fs: this.fs,
                 cwd: this.cwd,
-                print: this.print,
-                println: this.println,
-                readKey: this.readKey,
-                readLine: this.readLine,
+                print: this.print.bind(this),
+                println: this.println.bind(this),
+                readKey: this.readKey.bind(this),
+                readLine: this.readLine.bind(this),
                 resolveRelativePath,
             }
         }

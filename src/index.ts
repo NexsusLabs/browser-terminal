@@ -7,6 +7,7 @@ const screen = document.getElementById("output")!;
 
 createFS().then((fs) => {
     let bash: Process = new Bash(fs);
+    bash.env.PATH = "/usr/bin"
     bash.print = data => {
         screen.append(data);
     }

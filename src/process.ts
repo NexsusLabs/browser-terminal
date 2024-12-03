@@ -9,6 +9,7 @@ export default abstract class Process {
     
     args: string[];
     cwd = "/";
+    env: Record<string, string> = {};
 
     constructor(public fs: FS, ...args: string[]) {
         this.args = args;
@@ -51,8 +52,9 @@ export default abstract class Process {
         }
     }
 
-    async runSubprocessAndMapInputs(process: Process, cwd?: string, print = this.print) {
+    async runSubprocessAndMapInputs(process: Process, cwd?: string, env?: Process['env'], print = this.print) {
         process.cwd = resolveRelativePath(cwd || '.', this.cwd);
+        process.env = {...this.env, ...env};
         process.print = print;
         this.onInput.push([process.handleInput, false]);
         await process.main();

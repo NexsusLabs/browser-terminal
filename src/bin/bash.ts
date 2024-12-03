@@ -2,6 +2,7 @@ import { parse } from "shell-quote";
 import Process from "../process";
 import { resolveRelativePath } from "../process";
 import PATH from "./PATH";
+import { findAsync } from "../util";
 
 function hasGoodQuotes(s: string) {
     let q = '';
@@ -34,9 +35,10 @@ export default class Bash extends Process {
                 line += await this.readLine()+'\n';
             } while (line.endsWith('\\\n') || !hasGoodQuotes(line));
             line = line.replace('\\\n', '')
-            const parsed = parse(line)
+            const parsed = parse(line, this.env)
             console.log(parsed)
             let command: string[] = [];
+            let env: typeof this.env = {}
             let redirect: undefined | true | string, valid = true;
             for (const word of parsed) {
                 if (typeof word == 'object' && 'comment' in word) continue;
@@ -57,7 +59,11 @@ export default class Bash extends Process {
                     }
                 }
                 else if (typeof word == 'string') {
-                    command.push(word);
+                    if(word.includes('=')) {
+                        const [key, value] = word.split('=');
+                        env[key] = value;
+                    }
+                    else command.push(word);
                 }
                 else {
                     this.println("bash: unsupported token");
@@ -67,6 +73,10 @@ export default class Bash extends Process {
             }
             if (redirect === true) continue;
             if (!valid) continue;
+            if (!command.length) {
+                this.env = {...this.env, ...env}
+                continue;
+            };
             switch (command[0]) {
                 case '':
                     break;
@@ -95,23 +105,35 @@ export default class Bash extends Process {
                     let executable = PATH[command[0]]?.();
                     let removeFirstArg = true;
                     if (!executable) {
-                        if (await this.fs.promises.exists(resolveRelativePath(command[0], this.cwd))) {
+                        if(command[0].includes('/')){
+                            if (await this.fs.promises.exists(resolveRelativePath(command[0], this.cwd))) {
+                                executable = PATH['node']!();
+                                removeFirstArg = false;
+                            }
+                            else {
+                                this.println(`${command[0]}: command not found`);
+                                break;
+                            }
+                        } else {
+                            const path = (this.env.PATH || '').split(':').filter(Boolean);
+                            const firstValidDir = await findAsync(path, dir=> this.fs.promises.exists(dir+'/'+command[0]));
+                            if(!firstValidDir) {
+                                this.println(`${command[0]}: command not found`);
+                                break;
+                            }
+                            command[0] = firstValidDir+'/'+command[0]
                             executable = PATH['node']!();
                             removeFirstArg = false;
-                        }
-                        else {
-                            this.println(`${command[0]}: command not found`);
-                            break;
                         }
                     }
                     if(removeFirstArg) command= command.slice(1)
                     if (redirect) {
                         let output=''
-                        await this.runSubprocessAndMapInputs(new executable(this.fs, ...command), '.', data => output += data);
-                        await this.fs.writeFile(resolveRelativePath(redirect, this.cwd), output, 'utf-8');
+                        await this.runSubprocessAndMapInputs(new executable(this.fs, ...command), '.', env, data => output += data);
+                        await this.fs.promises.writeFile(resolveRelativePath(redirect, this.cwd), output, 'utf-8');
                     }
                     else
-                        await this.runSubprocessAndMapInputs(new executable(this.fs, ...command), '.');
+                        await this.runSubprocessAndMapInputs(new executable(this.fs, ...command), '.', env);
                     break;
                 }
             }

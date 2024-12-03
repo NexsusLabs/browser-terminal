@@ -6,7 +6,7 @@ import { createFS } from "./fs";
 const screen = document.getElementById("output")!;
 
 createFS().then((fs) => {
-    let bash: Process = new Bash(fs);
+    let bash = new Bash(fs);
     bash.env.PATH = "/usr/bin"
     bash.print = data => {
         screen.append(data);
@@ -15,7 +15,6 @@ createFS().then((fs) => {
         let char = e.key;
         if (char == "Enter") char = '\n';
         else if (char == "Backspace") char = '\b';
-        else if (char.length > 1) return;
         bash.handleInput(char);
     }
     document.body.focus();

@@ -2,7 +2,11 @@ import { FS } from "./fs";
 
 
 export const history: string[] = [];
-export let historyIndex = -1;
+export let historyIndex = {o: 0};
+//@ts-ignore
+window._history = history
+//@ts-ignore
+window._historyI = historyIndex
 
 export function resolveRelativePath(path: string, cwd: string): string {
     const url = new URL(path, "https://0.0.0.0" + cwd);
@@ -47,6 +51,7 @@ export default abstract class Process {
     async readLine(): Promise<string> {
         const input = document.getElementById("input")!;
         let result = '';
+        console.log(history, historyIndex)
         while (true) {
             const char = await this.readKey(false, false);
             console.log(char)
@@ -54,31 +59,27 @@ export default abstract class Process {
             else if (char == '\n') {
                 input.innerText = '';
                 this.print(result + '\n');
-                if ((result != '\n' && result != '')) {
-                    historyIndex++;
+                if (result != '\n' && result != '') {
+                    if(historyIndex.o != history.length)
+                        history.splice(historyIndex.o, 1);// bring that history item to the front
                     history.push(result);
-
+                    historyIndex.o = history.length;
                 }
-                console.log(history, historyIndex);
                 return result;
             }
             else if (char == 'ArrowUp') {
-                if (!(historyIndex + 1 >= history.length)) {
-                    historyIndex++;
-
+                if (historyIndex.o  > 0) {
+                    historyIndex.o--;
                 }
-                /* FIX ME*/ input.innerText = history[historyIndex]; // this line doesn't work as it should.
-                console.log(history[historyIndex], historyIndex);
+                result = history[historyIndex.o] || ''
             }
             else if (char == 'ArrowDown') {
-                if (!(historyIndex - 1 > 0)) {
-                    historyIndex--;
-
+                if (historyIndex.o < history.length) {
+                    historyIndex.o++;
                 }
-               /* FIX ME*/ input.innerText = history[historyIndex]; // this line doesn't work as it should.
-                console.log(history[historyIndex], historyIndex);
+                result = history[historyIndex.o] || ''
             }
-            else result += char;
+            else if (char.length == 1) result += char;
             input.innerText = result;
         }
     }

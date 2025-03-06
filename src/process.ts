@@ -2,11 +2,7 @@ import { FS } from "./fs";
 
 
 export const history: string[] = [];
-export let historyIndex = {o: 0};
-//@ts-ignore
-window._history = history
-//@ts-ignore
-window._historyI = historyIndex
+export let historyIndex = 0;
 
 export function resolveRelativePath(path: string, cwd: string): string {
     const url = new URL(path, "https://0.0.0.0" + cwd);
@@ -60,24 +56,24 @@ export default abstract class Process {
                 input.innerText = '';
                 this.print(result + '\n');
                 if (result != '\n' && result != '') {
-                    if(historyIndex.o != history.length)
-                        history.splice(historyIndex.o, 1);// bring that history item to the front
+                    if(historyIndex != history.length)
+                        history.splice(historyIndex, 1);// bring that history item to the front
                     history.push(result);
-                    historyIndex.o = history.length;
+                    historyIndex = history.length;
                 }
                 return result;
             }
             else if (char == 'ArrowUp') {
-                if (historyIndex.o  > 0) {
-                    historyIndex.o--;
+                if (historyIndex  > 0) {
+                    historyIndex--;
                 }
-                result = history[historyIndex.o] || ''
+                result = history[historyIndex] || ''
             }
             else if (char == 'ArrowDown') {
-                if (historyIndex.o < history.length) {
-                    historyIndex.o++;
+                if (historyIndex < history.length) {
+                    historyIndex++;
                 }
-                result = history[historyIndex.o] || ''
+                result = history[historyIndex] || ''
             }
             else if (char.length == 1) result += char;
             input.innerText = result;

@@ -1,0 +1,22 @@
+/* src/style.css */
+html {
+  height: 100%;
+}
+
+body {
+  box-sizing: border-box;
+  overflow-y: scroll;
+  word-wrap: break-word;
+  word-break: break-all;
+  color: #d3d3d3;
+  cursor: text;
+  background-color: #000;
+  height: 100%;
+  margin: 0;
+  padding: 10px;
+  font-family: Consolas, Courier New, Courier, monospace;
+}
+
+span {
+  white-space: pre;
+}
